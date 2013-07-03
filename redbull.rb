@@ -47,6 +47,7 @@ class RedBullAdventure
       end
       sleep 1
       puts "\n\nYou wake up 8 hours later feeling refreshed!\n"
+      sleep 1
       @alert_level = 100
       @money       = rand 1..10
       puts "\nYou look around and realize people mistook you for a beggar and have given you a total of $#{@money}.00\n"
