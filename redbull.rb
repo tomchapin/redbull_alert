@@ -1,4 +1,5 @@
 require 'pry'
+require 'curses'
 
 class RedBullAdventure
   attr_accessor :alert_level, :money
