@@ -56,13 +56,14 @@ class RedBullAdventure
 
   def action_loop
     @alert_level -= 5
-    puts "\nAlert Level: #{@alert_level} | Money: $#{@money}.00\n"
+    print "\rAlert Level: #{@alert_level} | Money: $#{@money}.00"
     sleep 1
     if @alert_level < 20
-      puts "\nYou are coming down off of your caffeine high\nand your legs and arms feel like lead...\n"
+      puts "\n\nYou are coming down off of your caffeine high\nand your legs and arms feel like lead...\n"
       if @alert_level < 10
         check_pocket_change
       end
+      puts "\n"
     end
     self.send :action_loop
   end
