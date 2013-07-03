@@ -71,5 +71,6 @@ class RedBullAdventure
 
 end
 
+system('clear')
 rba = RedBullAdventure.new
 rba.action_loop
