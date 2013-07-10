@@ -97,59 +97,88 @@ class RedBullAdventure
 
   end
 
+  def increment_money(num = 1)
+    @money += num
+    self
+  end
+
+  def increment_alert(num = 1)
+    @alert_level += num
+    self
+  end
+
+  def decrement_alert(num = 1)
+    @alert_level -= num
+    self
+  end
+
+  def set_alert(num)
+    @alert_level = num
+    self
+  end
+
+  def and
+    self
+  end
+
   def update_status(message)
     window = @windows[:status_window][:inner_window]
     window.addstr(message)
     window.refresh
+    self
   end
 
-  def update_log(message, delay_after = 2)
+  def update_log(message, delay_before: 0, delay_after: 2)
+    sleep delay_before
     window = @windows[:message_log_window][:inner_window]
     window.addstr(message)
     window.refresh
     sleep delay_after
+    self
   end
 
   def drink_red_bull
-    update_log "You chug a Red Bull.\n"
+    update_log "You chug a Red Bull.\n", delay_before: 2
     @alert_level += rand 15..40
     update_log "Your pupils dilate as your heart rate speeds up and your senses become\nheightened from the massive amount of caffeine you have just ingested!\n"
+    self
+  end
+
+  def fall_asleep
+    "Sleep mode... ".chars.each do |char|
+      update_log(char, delay_after: 0.1)
+    end
+    sleep 1
+    "ACTIVATE!!!".chars.each do |char|
+      update_log(char, delay_after: 0.1)
+    end
+    update_log "\n...while attempting to buy a Red Bull you fall asleep on the\npavement in front of the gas station...\n", delay_before: 2
+    "Zzzz...".chars.each do |char|
+      update_log(char, delay_after: 0.1)
+    end
+    set_alert(100).and.update_log("\nYou wake up 8 hours later feeling refreshed!\n", delay_before: 2)
+    money_given = rand 1..10
+    increment_money(money_given)
+    update_log "You look around and realize people mistook you for a beggar and\nhave given you a total of $#{money_given}.00\n"
+    self
   end
 
   def check_pocket_change
-    update_log("\nYou go to the gas station to buy a Red Bull ($2.00)\n", 0)
+    update_log "\nYou go to the gas station to buy a Red Bull ($2.00)\n", delay_after: 0
     if @money >= 2
       @money -= 2
-      sleep 2
       drink_red_bull
     else
-      sleep 2
-      update_log "You don't have enough money!\n"
-      "Sleep mode... ".chars.each do |char|
-        update_log(char, 0.1)
-      end
-      sleep 1
-      "ACTIVATE!!!".chars.each do |char|
-        update_log(char, 0.1)
-      end
-      sleep 2
-      update_log "\n...while attempting to buy a Red Bull you fall asleep on the\npavement in front of the gas station...\n"
-      "Zzzz...".chars.each do |char|
-        update_log(char, 0.1)
-      end
-      sleep 2
-      update_log "\nYou wake up 8 hours later feeling refreshed!\n"
-      @alert_level = 100
-      money_given  = rand 1..10
-      @money += money_given
-      update_log "You look around and realize people mistook you for a beggar and\nhave given you a total of $#{money_given}.00\n"
+      update_log "You don't have enough money!\n", delay_before: 2
+      fall_asleep
     end
+    self
   end
 
   def handle_keyboard_input
     window = @windows[:input_window][:inner_window]
     command = window.getstr
-    update_log("\nCommand Entered: #{command}\n", 0)
+    update_log "\nCommand Entered: #{command}\n", delay_after: 0
     if command == "exit" || command == "quit"
       stop_action_loop
     end
@@ -157,11 +186,11 @@ class RedBullAdventure
 
   def start_action_loop
     @loop_running = true
-    update_log("Your day begins...\n", 0)
+    update_log "Your day begins...\n", delay_after: 0
 
     @action_thread = Thread.new do
       while @loop_running
-        @alert_level -= 5
+        decrement_alert 5
         sleep 1
         if @alert_level < 20 && @alert_level > 10
           update_log "\rYou are coming down off of your caffeine high..."
@@ -174,6 +203,7 @@ class RedBullAdventure
     @update_status_thread = Thread.new do
       while @loop_running
         update_status "\rAlert Level: #{@alert_level} | Money: $#{@money}.00 "
+        sleep 0.1
       end
     end
 
