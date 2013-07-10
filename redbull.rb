@@ -21,7 +21,7 @@ class RedBullAdventure
   def init_display
 
     default_window_options = {
-      width: 80,
+      width: Curses.cols,
       height: 0,
       top: 0,
       left: 0,
@@ -36,7 +36,6 @@ class RedBullAdventure
     @windows = {
       status_window: {
         options: {
-          width: 80,
           height: 3,
           top: 0,
           left: 0
@@ -44,17 +43,15 @@ class RedBullAdventure
       },
       message_log_window: {
         options: {
-          width: 80,
-          height: 20,
+          height: Curses.lines - 6,
           top: 3,
           left: 0
         }
       },
       input_window: {
         options: {
-          width: 80,
           height: 3,
-          top: 23,
+          top: Curses.lines - 3,
           padding: {
             left: 2
           }
@@ -120,11 +117,13 @@ class RedBullAdventure
   end
 
   def check_pocket_change
-    update_log "\nYou go to the gas station to buy a Red Bull ($2.00)\n"
+    update_log("\nYou go to the gas station to buy a Red Bull ($2.00)\n", 0)
     if @money >= 2
       @money -= 2
+      sleep 2
       drink_red_bull
     else
+      sleep 2
       update_log "You don't have enough money!\n"
       "Sleep mode... ".chars.each do |char|
         update_log(char, 0.1)
@@ -151,6 +150,9 @@ class RedBullAdventure
     window = @windows[:input_window][:inner_window]
     command = window.getstr
     update_log("\nCommand Entered: #{command}\n", 0)
+    if command == "exit" || command == "quit"
+      stop_action_loop
+    end
   end
 
   def start_action_loop
@@ -160,7 +162,6 @@ class RedBullAdventure
     @action_thread = Thread.new do
       while @loop_running
         @alert_level -= 5
-        update_status "\rAlert Level: #{@alert_level} | Money: $#{@money}.00 "
         sleep 1
         if @alert_level < 20 && @alert_level > 10
           update_log "\rYou are coming down off of your caffeine high..."
@@ -170,12 +171,19 @@ class RedBullAdventure
       end
     end
 
+    @update_status_thread = Thread.new do
+      while @loop_running
+        update_status "\rAlert Level: #{@alert_level} | Money: $#{@money}.00 "
+      end
+    end
+
     @input_thread = Thread.new do
       while @loop_running
         handle_keyboard_input
       end
     end
 
+    @update_status_thread.join
     @input_thread.join
     @action_thread.join
   end
@@ -183,6 +191,9 @@ class RedBullAdventure
   def stop_action_loop
     @loop_running = false
     @action_thread.kill
+    @update_status_thread.kill
+    @input_thread.kill
+    system('clear')
   end
 
 end
